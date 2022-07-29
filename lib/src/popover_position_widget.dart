@@ -4,18 +4,18 @@ import 'popover_direction.dart';
 import 'popover_position_render_object.dart';
 
 class PopoverPositionWidget extends SingleChildRenderObjectWidget {
-  final Rect? attachRect;
-  final Animation<double>? scale;
-  final BoxConstraints? constraints;
-  final PopoverDirection? direction;
-  final double? arrowHeight;
+  final Rect attachRect;
+  final BoxConstraints constraints;
+  final PopoverDirection direction;
+  final double arrowHeight;
+  final ValueChanged<Offset> arrowOffsetNotifier;
 
   const PopoverPositionWidget({
     required this.arrowHeight,
-    this.attachRect,
-    this.constraints,
-    this.scale,
-    this.direction,
+    required this.attachRect,
+    required this.direction,
+    required this.constraints,
+    required this.arrowOffsetNotifier,
     Widget? child,
   }) : super(child: child);
 
@@ -24,19 +24,9 @@ class PopoverPositionWidget extends SingleChildRenderObjectWidget {
     return PopoverPositionRenderObject(
       attachRect: attachRect,
       direction: direction,
-      constraints: constraints,
+      additionalConstraints: constraints,
       arrowHeight: arrowHeight,
+      arrowOffsetNotifier: arrowOffsetNotifier,
     );
-  }
-
-  @override
-  void updateRenderObject(
-    BuildContext context,
-    PopoverPositionRenderObject renderObject,
-  ) {
-    renderObject
-      ..attachRect = attachRect
-      ..direction = direction
-      ..additionalConstraints = constraints;
   }
 }

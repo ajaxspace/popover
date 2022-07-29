@@ -5,148 +5,111 @@ import 'popover_path.dart';
 import 'utils/popover_utils.dart';
 
 class PopoverRenderShiftedBox extends RenderShiftedBox {
-  double? arrowWidth;
-  double? arrowHeight;
-  PopoverDirection? _direction;
-  Rect? _attachRect;
-  Color? _color;
-  List<BoxShadow>? _boxShadow;
-  double? _scale;
-  double? _radius;
+  final double arrowWidth;
+  final double arrowHeight;
+  final Color arrowColor;
+  PopoverDirection requestedDirection;
+  PopoverDirection? _resolvedDirection;
+  Rect? _resolvedArrowRect;
+  Rect attachRect;
 
   PopoverRenderShiftedBox({
-    this.arrowWidth,
-    this.arrowHeight,
+    required this.arrowWidth,
+    required this.arrowHeight,
+    required this.attachRect,
+    required this.requestedDirection,
+    required this.arrowColor,
     RenderBox? child,
-    Rect? attachRect,
-    Color? color,
-    List<BoxShadow>? boxShadow,
-    double? scale,
-    double? radius,
-    PopoverDirection? direction,
-  }) : super(child) {
-    _attachRect = attachRect;
-    _color = color;
-    _boxShadow = boxShadow;
-    _scale = scale;
-    _radius = radius;
-    _direction = direction;
-  }
-
-  Rect? get attachRect => _attachRect;
-  set attachRect(Rect? value) {
-    if (_attachRect == value) return;
-    _attachRect = value;
-    markNeedsLayout();
-  }
-
-  List<BoxShadow>? get boxShadow => _boxShadow;
-  set boxShadow(List<BoxShadow>? value) {
-    if (_boxShadow == value) return;
-    _boxShadow = value;
-    markNeedsLayout();
-  }
-
-  Color? get color => _color;
-  set color(Color? value) {
-    if (_color == value) return;
-    _color = value;
-    markNeedsLayout();
-  }
-
-  PopoverDirection? get direction => _direction;
-  set direction(PopoverDirection? value) {
-    if (_direction == value) return;
-    _direction = value;
-    markNeedsLayout();
-  }
-
-  double? get radius => _radius;
-  set radius(double? value) {
-    if (_radius == value) return;
-    _radius = value;
-    markNeedsLayout();
-  }
-
-  double? get scale => _scale;
-  set scale(double? value) {
-    _scale = value;
-    markNeedsLayout();
-  }
+  }) : super(child);
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    final localChild = child!;
+
     final transform = Matrix4.identity();
-    final childParentData = child!.parentData as BoxParentData;
-    final _direction = PopoverUtils.popoverDirection(
-      attachRect,
-      size,
-      direction,
-      arrowHeight,
-    );
-    final bodyRect = childParentData.offset & child!.size;
 
-    final arrowLeft =
-        attachRect!.left + attachRect!.width / 2 - arrowWidth! / 2 - offset.dx;
+    final _direction = _resolvedDirection ??
+        (_resolvedDirection = PopoverUtils.popoverDirection(
+          attachRect,
+          size,
+          requestedDirection,
+          arrowHeight,
+        ));
 
-    final arrowTop =
-        attachRect!.top + attachRect!.height / 2 - arrowWidth! / 2 - offset.dy;
-
-    late Rect arrowRect;
-    late Offset translation;
-
-    switch (_direction) {
-      case PopoverDirection.top:
-        arrowRect = Rect.fromLTWH(
-          arrowLeft,
-          child!.size.height,
-          arrowWidth!,
-          arrowHeight!,
-        );
-
-        translation = Offset(arrowLeft + arrowWidth! / 2, size.height);
-        break;
-      case PopoverDirection.bottom:
-        arrowRect = Rect.fromLTWH(arrowLeft, 0, arrowWidth!, arrowHeight!);
-        translation = Offset(arrowLeft + arrowWidth! / 2, 0);
-        break;
-      case PopoverDirection.left:
-        arrowRect = Rect.fromLTWH(
-          child!.size.width,
-          arrowTop,
-          arrowHeight!,
-          arrowWidth!,
-        );
-
-        translation = Offset(size.width, arrowTop + arrowWidth! / 2);
-        break;
-      case PopoverDirection.right:
-        arrowRect = Rect.fromLTWH(
-          0,
-          arrowTop,
-          arrowHeight!,
-          arrowWidth!,
-        );
-        translation = Offset(0, arrowTop + arrowWidth! / 2);
-        break;
-    }
-
-    _transform(transform, translation);
-
-    _paintShadows(context, transform, offset, _direction, arrowRect, bodyRect);
+    final arrowRect = _resolvedArrowRect ??
+        (_resolvedArrowRect = _getArrowRect(
+          _direction,
+          attachRect.left + attachRect.width / 2 - arrowWidth / 2 - offset.dx,
+          localChild.size,
+          attachRect.top + attachRect.height / 2 - arrowWidth / 2 - offset.dy,
+        ));
+    final childParentData = localChild.parentData as BoxParentData;
 
     _pushClipPath(
       context,
       offset,
-      PopoverPath(radius!).draw(_direction, arrowRect, bodyRect),
+      const PopoverPath().draw(_direction, arrowRect),
       transform,
+    );
+
+    localChild.paint(
+      context,
+      offset.translate(childParentData.offset.dx, childParentData.offset.dy),
     );
   }
 
-  void _transform(Matrix4 transform, Offset translation) {
-    transform.translate(translation.dx, translation.dy);
-    transform.scale(scale, scale, 1);
-    transform.translate(-translation.dx, -translation.dy);
+  Rect _getArrowRect(
+    PopoverDirection _direction,
+    double arrowLeft,
+    Size size,
+    double arrowTop,
+  ) {
+    switch (_direction) {
+      case PopoverDirection.top:
+        return Rect.fromLTWH(arrowLeft, size.height, arrowWidth, arrowHeight);
+      case PopoverDirection.bottom:
+        return Rect.fromLTWH(arrowLeft, 0, arrowWidth, arrowHeight);
+      case PopoverDirection.left:
+        return Rect.fromLTWH(size.width, arrowTop, arrowHeight, arrowWidth);
+      case PopoverDirection.right:
+        return Rect.fromLTWH(0, arrowTop, arrowHeight, arrowWidth);
+    }
+  }
+
+  Offset getArrowOffset(Offset offset, Size childSize) {
+    final arrowLeft = attachRect.left + attachRect.width / 2 - arrowWidth / 2 - offset.dx;
+    final arrowTop = attachRect.top + attachRect.height / 2 - arrowWidth / 2 - offset.dy;
+
+    final realSize = Size(
+      childSize.width - (requestedDirection.isHorizontal ? arrowHeight : 0),
+      childSize.height - (requestedDirection.isVertical ? arrowHeight : 0),
+    );
+
+    final localDirection = _resolvedDirection ??
+        (_resolvedDirection = PopoverUtils.popoverDirection(
+          attachRect,
+          childSize,
+          requestedDirection,
+          arrowHeight,
+        ));
+
+    final arrowRect = _resolvedArrowRect = _getArrowRect(
+      localDirection,
+      arrowLeft,
+      realSize,
+      arrowTop,
+    );
+
+    switch (localDirection) {
+      case PopoverDirection.top:
+        return arrowRect.bottomCenter;
+      case PopoverDirection.bottom:
+        return arrowRect.topCenter;
+      case PopoverDirection.left:
+        return arrowRect.centerRight;
+      case PopoverDirection.right:
+        return arrowRect.centerLeft;
+    }
   }
 
   void _pushClipPath(
@@ -159,15 +122,11 @@ class PopoverRenderShiftedBox extends RenderShiftedBox {
       context,
       offset,
     ) {
-      context.pushTransform(needsCompositing, offset, transform, (
-        context,
-        offset,
-      ) {
-        final backgroundPaint = Paint();
-        backgroundPaint.color = color!;
-        context.canvas.drawRect(offset & size, backgroundPaint);
-        super.paint(context, offset);
-      });
+      final backgroundPaint = Paint();
+      backgroundPaint.color = arrowColor;
+      context.canvas.drawPath(path.shift(offset), backgroundPaint);
+
+      super.paint(context, offset);
     });
   }
 
@@ -176,84 +135,54 @@ class PopoverRenderShiftedBox extends RenderShiftedBox {
     assert(constraints.maxHeight.isFinite);
 
     _configureChildConstrains();
-    _configureChildSize();
+    _configureChildSize(child!.size);
     _configureChildOffset();
   }
 
   void _configureChildConstrains() {
     BoxConstraints childConstraints;
 
-    if (direction == PopoverDirection.top ||
-        direction == PopoverDirection.bottom) {
+    if (requestedDirection.isVertical) {
       childConstraints = BoxConstraints(
-        maxHeight: constraints.maxHeight - arrowHeight!,
+        maxHeight: constraints.maxHeight - arrowHeight,
       ).enforce(constraints);
     } else {
       childConstraints = BoxConstraints(
-        maxWidth: constraints.maxWidth - arrowHeight!,
+        maxWidth: constraints.maxWidth - arrowHeight,
       ).enforce(constraints);
     }
 
-    child!.layout(childConstraints, parentUsesSize: true);
+    child?.layout(childConstraints, parentUsesSize: true);
   }
 
-  void _configureChildSize() {
-    if (direction == PopoverDirection.top ||
-        direction == PopoverDirection.bottom) {
-      size = Size(child!.size.width, child!.size.height + arrowHeight!);
+  void _configureChildSize(Size childSize) {
+    if (requestedDirection.isVertical) {
+      size = Size(childSize.width, childSize.height + arrowHeight);
     } else {
-      size = Size(child!.size.width + arrowHeight!, child!.size.height);
+      size = Size(childSize.width + arrowHeight, childSize.height);
     }
   }
 
   void _configureChildOffset() {
-    final _direction = PopoverUtils.popoverDirection(
+    final _direction = _resolvedDirection = PopoverUtils.popoverDirection(
       attachRect,
       size,
-      direction,
+      requestedDirection,
       arrowHeight,
     );
 
-    final childParentData = child!.parentData as BoxParentData?;
-    if (_direction == PopoverDirection.bottom) {
-      childParentData!.offset = Offset(0, arrowHeight!);
-    } else if (_direction == PopoverDirection.right) {
-      childParentData!.offset = Offset(arrowHeight!, 0);
-    } else {
-      childParentData!.offset = const Offset(0, 0);
+    final childParentData = child?.parentData as BoxParentData?;
+
+    if (childParentData == null) {
+      return;
     }
-  }
 
-  void _paintShadows(
-    PaintingContext context,
-    Matrix4 transform,
-    Offset offset,
-    PopoverDirection direction,
-    Rect? arrowRect,
-    Rect bodyRect,
-  ) {
-    if (boxShadow == null) return;
-    for (final boxShadow in boxShadow!) {
-      final paint = boxShadow.toPaint();
-
-      arrowRect = arrowRect!
-          .shift(offset)
-          .shift(boxShadow.offset)
-          .inflate(boxShadow.spreadRadius);
-
-      bodyRect = bodyRect
-          .shift(offset)
-          .shift(boxShadow.offset)
-          .inflate(boxShadow.spreadRadius);
-
-      final path = PopoverPath(radius!).draw(_direction, arrowRect, bodyRect);
-
-      context.pushTransform(needsCompositing, offset, transform, (
-        context,
-        offset,
-      ) {
-        context.canvas.drawPath(path, paint);
-      });
+    if (_direction == PopoverDirection.bottom) {
+      childParentData.offset = Offset(0, arrowHeight);
+    } else if (_direction == PopoverDirection.right) {
+      childParentData.offset = Offset(arrowHeight, 0);
+    } else {
+      childParentData.offset = const Offset(0, 0);
     }
   }
 }

@@ -28,7 +28,6 @@ linter:
     - empty_statements
     - hash_and_equals
     - implementation_imports
-    - lines_longer_than_80_chars
     - non_constant_identifier_names
     - one_member_abstracts
     - package_names

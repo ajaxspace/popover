@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:popover/src/attached_scale_transition.dart';
 
 import 'popover_direction.dart';
 import 'popover_item.dart';
+import 'utils/attach_rect_provider.dart';
 
 /// A popover is a transient view that appears above other content onscreen
 /// when you tap a control or in an area.
@@ -70,11 +72,9 @@ Future<T?> showPopover<T extends Object?>({
   PopoverDirection direction = PopoverDirection.bottom,
   Color backgroundColor = const Color(0x8FFFFFFFF),
   Color barrierColor = const Color(0x80000000),
-  Duration transitionDuration = const Duration(milliseconds: 200),
+  Duration transitionDuration = const Duration(milliseconds: 5000),
   double radius = 8,
-  List<BoxShadow> shadow = const [
-    BoxShadow(color: Color(0x1F000000), blurRadius: 5)
-  ],
+  List<BoxShadow> shadow = const [BoxShadow(color: Color(0x1F000000), blurRadius: 5)],
   double arrowWidth = 24,
   double arrowHeight = 12,
   double arrowDxOffset = 0,
@@ -95,45 +95,63 @@ Future<T?> showPopover<T extends Object?>({
           BoxConstraints.tightFor(width: width, height: height)
       : constraints;
 
+  Offset? arrowOffset;
+
+  final attachRect = const AttachRectProvider().getAttachRect(
+    context,
+    arrowDxOffset: arrowDxOffset,
+    arrowDyOffset: arrowDyOffset,
+    contentDyOffset: contentDyOffset,
+  );
+
   return Navigator.of(context, rootNavigator: true).push<T>(
     RawDialogRoute<T>(
       pageBuilder: (_, __, ___) {
-        return Builder(builder: (_) => const SizedBox.shrink());
+        return PopoverItem(
+          child: Material(
+            type: MaterialType.transparency,
+            child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(radius)),
+                  color: backgroundColor,
+                ),
+                child: bodyBuilder(_)),
+          ),
+          context: context,
+          attachRect: attachRect,
+          direction: direction,
+          arrowWidth: arrowWidth,
+          arrowHeight: arrowHeight,
+          constraints: constraints,
+          arrowDxOffset: arrowDxOffset,
+          arrowDyOffset: arrowDyOffset,
+          contentDyOffset: contentDyOffset,
+          isParentAlive: isParentAlive,
+          arrowColor: backgroundColor,
+          arrowOffsetNotifier: (offset) {
+            arrowOffset = offset;
+          },
+          key: key,
+        );
       },
       barrierDismissible: barrierDismissible,
-      barrierLabel: barrierLabel ??=
-          MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierLabel: barrierLabel ??= MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: barrierColor,
-      transitionDuration: transitionDuration,
+      transitionDuration: const Duration(milliseconds: 600),
       settings: routeSettings,
       transitionBuilder: (builderContext, animation, _, child) {
         return WillPopScope(
           onWillPop: () {
-            if (onPop != null) {
-              onPop();
-              return Future.value(true);
-            } else {
-              return Future.value(true);
-            }
+            onPop?.call();
+
+            return Future.value(true);
           },
           child: FadeTransition(
             opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-            child: PopoverItem(
-              child: bodyBuilder(builderContext),
-              context: context,
-              backgroundColor: backgroundColor,
-              direction: direction,
-              radius: radius,
-              boxShadow: shadow,
-              animation: animation,
-              arrowWidth: arrowWidth,
-              arrowHeight: arrowHeight,
-              constraints: constraints,
-              arrowDxOffset: arrowDxOffset,
-              arrowDyOffset: arrowDyOffset,
-              contentDyOffset: contentDyOffset,
-              isParentAlive: isParentAlive,
-              key: key,
+            child: AttachedScaleTransition(
+              scale: animation,
+              attachRect: arrowOffset ?? attachRect.center,
+              child: child,
             ),
           ),
         );
