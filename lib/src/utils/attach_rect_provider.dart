@@ -12,6 +12,7 @@ class AttachRectProvider {
   }) {
     final offset = BuildContextExtension.getWidgetLocalToGlobal(context);
     final bounds = BuildContextExtension.getWidgetBounds(context);
+
     final attachRect = Rect.fromLTWH(
       offset.dx + arrowDxOffset,
       offset.dy + arrowDyOffset,

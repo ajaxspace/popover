@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'popover_direction.dart';
-import 'popover_position_render_object.dart';
+import 'package:popover/src/popover_direction.dart';
+import 'package:popover/src/popover_position_render_object.dart';
 
 class PopoverPositionWidget extends SingleChildRenderObjectWidget {
   final Rect attachRect;

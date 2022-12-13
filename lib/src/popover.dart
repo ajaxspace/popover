@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:popover/src/attached_scale_transition.dart';
-
-import 'popover_direction.dart';
-import 'popover_item.dart';
-import 'utils/attach_rect_provider.dart';
+import 'package:popover/src/popover_arrow_type.dart';
+import 'package:popover/src/popover_direction.dart';
+import 'package:popover/src/popover_item.dart';
+import 'package:popover/src/utils/attach_rect_provider.dart';
 
 /// A popover is a transient view that appears above other content onscreen
 /// when you tap a control or in an area.
@@ -70,11 +70,11 @@ Future<T?> showPopover<T extends Object?>({
   required BuildContext context,
   required WidgetBuilder bodyBuilder,
   PopoverDirection direction = PopoverDirection.bottom,
+  PopoverArrowType arrowType = PopoverArrowType.sharp,
   Color backgroundColor = const Color(0x8FFFFFFFF),
   Color barrierColor = const Color(0x80000000),
-  Duration transitionDuration = const Duration(milliseconds: 5000),
+  Duration transitionDuration = const Duration(milliseconds: 200),
   double radius = 8,
-  List<BoxShadow> shadow = const [BoxShadow(color: Color(0x1F000000), blurRadius: 5)],
   double arrowWidth = 24,
   double arrowHeight = 12,
   double arrowDxOffset = 0,
@@ -111,11 +111,12 @@ Future<T?> showPopover<T extends Object?>({
           child: Material(
             type: MaterialType.transparency,
             child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(radius)),
-                  color: backgroundColor,
-                ),
-                child: bodyBuilder(_)),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                color: backgroundColor,
+              ),
+              child: bodyBuilder(_),
+            ),
           ),
           context: context,
           attachRect: attachRect,
@@ -128,6 +129,7 @@ Future<T?> showPopover<T extends Object?>({
           contentDyOffset: contentDyOffset,
           isParentAlive: isParentAlive,
           arrowColor: backgroundColor,
+          arrowType: arrowType,
           arrowOffsetNotifier: (offset) {
             arrowOffset = offset;
           },
@@ -137,7 +139,7 @@ Future<T?> showPopover<T extends Object?>({
       barrierDismissible: barrierDismissible,
       barrierLabel: barrierLabel ??= MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: barrierColor,
-      transitionDuration: const Duration(milliseconds: 600),
+      transitionDuration: transitionDuration,
       settings: routeSettings,
       transitionBuilder: (builderContext, animation, _, child) {
         return WillPopScope(

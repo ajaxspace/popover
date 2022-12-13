@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
-import 'popover_direction.dart';
-import 'popover_render_shifted_box.dart';
+import 'package:popover/src/popover_arrow_type.dart';
+import 'package:popover/src/popover_direction.dart';
+import 'package:popover/src/popover_render_shifted_box.dart';
 
 class PopoverContext extends SingleChildRenderObjectWidget {
   final Rect attachRect;
@@ -9,6 +9,7 @@ class PopoverContext extends SingleChildRenderObjectWidget {
   final double arrowWidth;
   final double arrowHeight;
   final Color arrowColor;
+  final PopoverArrowType arrowType;
 
   const PopoverContext({
     required this.attachRect,
@@ -16,6 +17,7 @@ class PopoverContext extends SingleChildRenderObjectWidget {
     required this.arrowWidth,
     required this.arrowHeight,
     required this.arrowColor,
+    required this.arrowType,
     Widget? child,
   }) : super(child: child);
 
@@ -27,6 +29,7 @@ class PopoverContext extends SingleChildRenderObjectWidget {
       arrowWidth: arrowWidth,
       arrowHeight: arrowHeight,
       arrowColor: arrowColor,
+      arrowType: arrowType,
     );
   }
 }

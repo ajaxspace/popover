@@ -21,16 +21,7 @@ class PopoverExample extends StatelessWidget {
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     const Button(),
-                    const Button(),
-                    const Button(),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    const Button(),
-                    const Button(),
+                    const Button(direction: PopoverDirection.bottom),
                     const Button(),
                   ],
                 ),
@@ -40,6 +31,15 @@ class PopoverExample extends StatelessWidget {
                   children: [
                     const Button(),
                     const Button(),
+                    const Button(),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    const Button(),
+                    const Button(direction: PopoverDirection.top),
                     const Button(),
                   ],
                 ),
@@ -53,7 +53,9 @@ class PopoverExample extends StatelessWidget {
 }
 
 class Button extends StatelessWidget {
-  const Button({Key? key}) : super(key: key);
+  final PopoverDirection direction;
+
+  const Button({this.direction = PopoverDirection.left, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -70,14 +72,15 @@ class Button extends StatelessWidget {
         onTap: () {
           showPopover(
             context: context,
-            transitionDuration: const Duration(milliseconds: 150),
+            transitionDuration: const Duration(milliseconds: 600),
             bodyBuilder: (context) => const ListItems(),
             onPop: () => print('Popover was popped!'),
-            direction: PopoverDirection.bottom,
-            width: 200,
-            height: 400,
-            arrowHeight: 15,
-            arrowWidth: 30,
+            direction: direction,
+            arrowType: PopoverArrowType.rounded,
+            arrowHeight: 16,
+            width: 600,
+            height: 600,
+            arrowWidth: 32,
           );
         },
       ),
@@ -141,6 +144,18 @@ class ListItems extends StatelessWidget {
               height: 50,
               color: Colors.amber[600],
               child: const Center(child: Text('Entry F')),
+            ),
+            const Divider(),
+            Container(
+              height: 50,
+              color: Colors.amber[600],
+              child: const Center(child: Text('Entry G')),
+            ),
+            const Divider(),
+            Container(
+              height: 50,
+              color: Colors.amber[600],
+              child: const Center(child: Text('Entry K')),
             ),
           ],
         ),

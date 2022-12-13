@@ -11,6 +11,7 @@ class Utils {
 
   factory Utils() {
     _singleton._init();
+
     return _singleton;
   }
 
@@ -18,6 +19,7 @@ class Utils {
 
   void _init() {
     final mediaQuery = MediaQueryData.fromWindow(ui.window);
+
     if (mediaQueryData != mediaQuery) {
       screenWidth = mediaQuery.size.width;
       screenHeight = mediaQuery.size.height;

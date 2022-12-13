@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-
-import 'popover_context.dart';
-import 'popover_direction.dart';
-import 'popover_position_widget.dart';
-import 'utils/utils.dart';
+import 'package:popover/src/popover_arrow_type.dart';
+import 'package:popover/src/popover_context.dart';
+import 'package:popover/src/popover_direction.dart';
+import 'package:popover/src/popover_position_widget.dart';
+import 'package:popover/src/utils/extensions.dart';
+import 'package:popover/src/utils/utils.dart';
 
 class PopoverItem extends StatefulWidget {
   final Widget child;
@@ -19,6 +20,7 @@ class PopoverItem extends StatefulWidget {
   final bool Function()? isParentAlive;
   final ValueChanged<Offset> arrowOffsetNotifier;
   final Rect attachRect;
+  final PopoverArrowType arrowType;
 
   const PopoverItem({
     required this.child,
@@ -32,6 +34,7 @@ class PopoverItem extends StatefulWidget {
     required this.arrowDyOffset,
     required this.contentDyOffset,
     required this.arrowOffsetNotifier,
+    required this.arrowType,
     this.constraints,
     this.isParentAlive,
     Key? key,
@@ -62,6 +65,7 @@ class _PopoverItemState extends State<PopoverItem> {
             arrowWidth: widget.arrowWidth,
             arrowHeight: widget.arrowHeight,
             arrowColor: widget.arrowColor,
+            arrowType: widget.arrowType,
             child: widget.child,
           ),
         )
@@ -89,20 +93,21 @@ class _PopoverItemState extends State<PopoverItem> {
 
     if (localConstraints != null) {
       _constraints = BoxConstraints(
-        maxHeight: Utils().screenHeight / 2,
-        maxWidth: Utils().screenHeight / 2,
+        maxHeight: Utils().screenHeight,
+        maxWidth: Utils().screenHeight,
       ).copyWith(
-        minWidth: localConstraints.minWidth.isFinite ? localConstraints.minWidth : null,
-        minHeight: localConstraints.minHeight.isFinite ? localConstraints.minHeight : null,
-        maxWidth: localConstraints.maxWidth.isFinite ? localConstraints.maxWidth : null,
-        maxHeight: localConstraints.maxHeight.isFinite ? localConstraints.maxHeight : null,
+        minWidth: localConstraints.minWidth.finiteOrNull,
+        minHeight: localConstraints.minHeight.finiteOrNull,
+        maxWidth: localConstraints.maxWidth.finiteOrNull,
+        maxHeight: localConstraints.maxHeight.finiteOrNull,
       );
     } else {
       _constraints = BoxConstraints(
-        maxHeight: Utils().screenHeight / 2,
-        maxWidth: Utils().screenHeight / 2,
+        maxHeight: Utils().screenHeight,
+        maxWidth: Utils().screenHeight,
       );
     }
+
     if (widget.direction.isVertical) {
       constraints = _constraints.copyWith(
         maxHeight: _constraints.maxHeight + widget.arrowHeight,
@@ -110,8 +115,8 @@ class _PopoverItemState extends State<PopoverItem> {
       );
     } else {
       constraints = _constraints.copyWith(
-        maxHeight: _constraints.maxHeight + widget.arrowHeight,
-        maxWidth: _constraints.maxWidth + widget.arrowWidth,
+        maxHeight: _constraints.maxHeight,
+        maxWidth: _constraints.maxWidth + widget.arrowHeight,
       );
     }
   }

@@ -1,13 +1,14 @@
 import 'package:flutter/rendering.dart';
-
-import 'popover_direction.dart';
-import 'popover_path.dart';
-import 'utils/popover_utils.dart';
+import 'package:popover/src/popover_arrow_type.dart';
+import 'package:popover/src/popover_direction.dart';
+import 'package:popover/src/popover_path.dart';
+import 'package:popover/src/utils/popover_utils.dart';
 
 class PopoverRenderShiftedBox extends RenderShiftedBox {
   final double arrowWidth;
   final double arrowHeight;
   final Color arrowColor;
+  final PopoverArrowType arrowType;
   PopoverDirection requestedDirection;
   PopoverDirection? _resolvedDirection;
   Rect? _resolvedArrowRect;
@@ -19,6 +20,7 @@ class PopoverRenderShiftedBox extends RenderShiftedBox {
     required this.attachRect,
     required this.requestedDirection,
     required this.arrowColor,
+    required this.arrowType,
     RenderBox? child,
   }) : super(child);
 
@@ -43,12 +45,13 @@ class PopoverRenderShiftedBox extends RenderShiftedBox {
           localChild.size,
           attachRect.top + attachRect.height / 2 - arrowWidth / 2 - offset.dy,
         ));
+
     final childParentData = localChild.parentData as BoxParentData;
 
     _pushClipPath(
       context,
       offset,
-      const PopoverPath().draw(_direction, arrowRect),
+      const PopoverPath().draw(_direction, arrowRect, arrowType),
       transform,
     );
 
@@ -134,33 +137,27 @@ class PopoverRenderShiftedBox extends RenderShiftedBox {
   void performLayout() {
     assert(constraints.maxHeight.isFinite);
 
-    _configureChildConstrains();
-    _configureChildSize(child!.size);
+    final constrains = _configureChildConstrains();
+
+    _configureChildSize(child!.size, constrains);
+
     _configureChildOffset();
   }
 
-  void _configureChildConstrains() {
-    BoxConstraints childConstraints;
+  BoxConstraints _configureChildConstrains() {
+    child?.layout(
+      constraints,
+      parentUsesSize: true,
+    );
 
-    if (requestedDirection.isVertical) {
-      childConstraints = BoxConstraints(
-        maxHeight: constraints.maxHeight - arrowHeight,
-      ).enforce(constraints);
-    } else {
-      childConstraints = BoxConstraints(
-        maxWidth: constraints.maxWidth - arrowHeight,
-      ).enforce(constraints);
-    }
-
-    child?.layout(childConstraints, parentUsesSize: true);
+    return constraints;
   }
 
-  void _configureChildSize(Size childSize) {
-    if (requestedDirection.isVertical) {
-      size = Size(childSize.width, childSize.height + arrowHeight);
-    } else {
-      size = Size(childSize.width + arrowHeight, childSize.height);
-    }
+  void _configureChildSize(Size childSize, BoxConstraints constraints) {
+    size = Size(
+      constraints.constrainWidth(childSize.width),
+      constraints.constrainHeight(childSize.height),
+    );
   }
 
   void _configureChildOffset() {
@@ -181,8 +178,10 @@ class PopoverRenderShiftedBox extends RenderShiftedBox {
       childParentData.offset = Offset(0, arrowHeight);
     } else if (_direction == PopoverDirection.right) {
       childParentData.offset = Offset(arrowHeight, 0);
+    } else if (_direction == PopoverDirection.left) {
+      childParentData.offset = Offset(-arrowHeight, 0);
     } else {
-      childParentData.offset = const Offset(0, 0);
+      childParentData.offset = Offset(0, -arrowHeight);
     }
   }
 }

@@ -1,9 +1,8 @@
 import 'package:flutter/rendering.dart';
-
-import 'popover_direction.dart';
-import 'popover_render_shifted_box.dart';
-import 'utils/popover_utils.dart';
-import 'utils/utils.dart';
+import 'package:popover/src/popover_direction.dart';
+import 'package:popover/src/popover_render_shifted_box.dart';
+import 'package:popover/src/utils/popover_utils.dart';
+import 'package:popover/src/utils/utils.dart';
 
 class PopoverPositionRenderObject extends RenderShiftedBox {
   final Rect attachRect;
@@ -21,7 +20,7 @@ class PopoverPositionRenderObject extends RenderShiftedBox {
     RenderBox? child,
   }) : super(child);
 
-  Offset calculateOffset(Size size) {
+  Offset _getOffset(Size size) {
     final _direction = PopoverUtils.popoverDirection(
       attachRect,
       size,
@@ -41,13 +40,18 @@ class PopoverPositionRenderObject extends RenderShiftedBox {
     final localChild = child!;
 
     localChild.layout(
-      additionalConstraints.enforce(constraints),
+      PopoverUtils.getEnforcedConstraints(
+        attachRect: attachRect,
+        arrowHeight: arrowHeight,
+        initialConstraints: additionalConstraints.enforce(constraints),
+        requestedDirection: direction,
+      ),
       parentUsesSize: true,
     );
 
     size = Size(constraints.maxWidth, constraints.maxHeight);
     final childParentData = localChild.parentData as BoxParentData?;
-    final localOffset = calculateOffset(localChild.size);
+    final localOffset = _getOffset(localChild.size);
     childParentData?.offset = localOffset;
 
     if (localChild is PopoverRenderShiftedBox) {
@@ -94,6 +98,7 @@ class PopoverPositionRenderObject extends RenderShiftedBox {
     } else {
       offset = Utils().screenWidth - arrowHeight - size.width;
     }
+
     return offset;
   }
 
@@ -108,6 +113,7 @@ class PopoverPositionRenderObject extends RenderShiftedBox {
     } else {
       offset = Utils().screenHeight - arrowHeight - size.height;
     }
+
     return offset;
   }
 }

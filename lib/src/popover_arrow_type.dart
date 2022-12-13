@@ -1,0 +1,4 @@
+enum PopoverArrowType {
+  sharp,
+  rounded,
+}
